@@ -1,6 +1,6 @@
-import { Currency } from './currency.enum.ts';
+import { CURRENCIES } from './currencies.const.ts';
 
 export interface Amount {
   amount: number;
-  currency: Currency;
+  currency: typeof CURRENCIES[number];
 }

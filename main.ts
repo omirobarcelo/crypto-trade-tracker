@@ -2,22 +2,27 @@ import { chalkin, Input } from './deps.ts';
 
 import { TransactionsMap } from './interfaces/transactions-map.interface.ts';
 import { loadData } from './libs/data-loader.ts';
+import { listTransactions, parseListing, showTransactions } from './libs/list-transactions.ts';
 import { parseTransaction, persistTransaction, writeTransaction } from './libs/write-transaction.ts';
 
 const TRANSACTIONS_PATH = './data/transactions.json';
 interface ActionFn {
   // deno-lint-ignore no-explicit-any
-  (data: TransactionsMap, ...args: any[]): Promise<void>;
+  (data: TransactionsMap, ...args: any[]): void | Promise<void>;
 }
 
 // deno-lint-ignore no-explicit-any
 const cliParsers: { [key: string]: (...args: any[]) => any[] | null } = {
   '-w': parseTransaction,
-  '--write': parseTransaction
+  '--write': parseTransaction,
+  '-l': parseListing,
+  '--list': parseListing
 };
 const cliActors: { [key: string]: ActionFn } = {
   '-w': persistTransaction,
-  '--write': persistTransaction
+  '--write': persistTransaction,
+  '-l': showTransactions,
+  '--list': showTransactions
 };
 
 // Parse CLI input
@@ -42,16 +47,19 @@ if (Deno.args.length > 0) {
 }
 
 // Run interactive program
-const actions: { [key: number]: ActionFn } = {
-  0: writeTransaction
+const ACTION_NAME = 0;
+const ACTION_PROGRAM = 1;
+const actions: { [key: number]: [string, ActionFn] } = {
+  0: ['List transactions', listTransactions],
+  1: ['New transaction', writeTransaction]
 };
 const input = new Input();
 while (!input.done) {
-  const result = await input.choose(['New transaction', 'Exit']);
+  const result = await input.choose([...Object.values(actions).map((action) => action[ACTION_NAME]), 'Exit']);
   const selected = result.findIndex((val) => val);
   if (selected === result.length - 1) {
     input.close();
     continue;
   }
-  await actions[selected](data, TRANSACTIONS_PATH);
+  await actions[selected][ACTION_PROGRAM](data, TRANSACTIONS_PATH);
 }

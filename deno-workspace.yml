@@ -3,3 +3,4 @@ scripts:
     file: main.ts
     deno_options:
       allow-read: ./data
+      allow-write: ./data

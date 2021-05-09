@@ -3,6 +3,7 @@ import { chalkin, Input } from './deps.ts';
 import { TransactionsMap } from './interfaces/transactions-map.interface.ts';
 import { loadData } from './libs/data-loader.ts';
 import { listTransactions, parseListing, showTransactions } from './libs/list-transactions.ts';
+import { printSummary } from './libs/summary.ts';
 import { parseTransaction, persistTransaction, writeTransaction } from './libs/write-transaction.ts';
 
 const TRANSACTIONS_PATH = './data/transactions.json';
@@ -16,13 +17,17 @@ const cliParsers: { [key: string]: (...args: any[]) => any[] | null } = {
   '-w': parseTransaction,
   '--write': parseTransaction,
   '-l': parseListing,
-  '--list': parseListing
+  '--list': parseListing,
+  '-s': () => [],
+  '--summary': () => []
 };
 const cliActors: { [key: string]: ActionFn } = {
   '-w': persistTransaction,
   '--write': persistTransaction,
   '-l': showTransactions,
-  '--list': showTransactions
+  '--list': showTransactions,
+  '-s': printSummary,
+  '--summary': printSummary
 };
 
 // Parse CLI input
@@ -51,7 +56,8 @@ const ACTION_NAME = 0;
 const ACTION_PROGRAM = 1;
 const actions: { [key: number]: [string, ActionFn] } = {
   0: ['List transactions', listTransactions],
-  1: ['New transaction', writeTransaction]
+  1: ['New transaction', writeTransaction],
+  2: ['Print summary', printSummary]
 };
 const input = new Input();
 while (!input.done) {

@@ -3,6 +3,7 @@ import { chalkin, Input } from './deps.ts';
 import { TransactionsMap } from './interfaces/transactions-map.interface.ts';
 import { parseBenefitQuery, printBenefits, showBenefits } from './libs/benefits.ts';
 import { loadData } from './libs/data-loader.ts';
+import { help } from './libs/help.ts';
 import { listTransactions, parseListing, showTransactions } from './libs/list-transactions.ts';
 import { printSummary } from './libs/summary.ts';
 import { parseTransaction, persistTransaction, writeTransaction } from './libs/write-transaction.ts';
@@ -39,6 +40,11 @@ const cliActors: { [key: string]: ActionFn } = {
 // deno-lint-ignore no-explicit-any
 let parseResult: any[] | null;
 if (Deno.args.length > 0) {
+  if (Deno.args[0] === '-m' || Deno.args[0] === '--man') {
+    help();
+    Deno.exit();
+  }
+
   parseResult = cliParsers[Deno.args[0]](...Deno.args.slice(1));
   if (parseResult == null) {
     Deno.exit(1);

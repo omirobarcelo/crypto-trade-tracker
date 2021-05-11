@@ -1,6 +1,7 @@
 import { chalkin, Input } from './deps.ts';
 
 import { TransactionsMap } from './interfaces/transactions-map.interface.ts';
+import { parseBenefitQuery, printBenefits, showBenefits } from './libs/benefits.ts';
 import { loadData } from './libs/data-loader.ts';
 import { listTransactions, parseListing, showTransactions } from './libs/list-transactions.ts';
 import { printSummary } from './libs/summary.ts';
@@ -19,7 +20,9 @@ const cliParsers: { [key: string]: (...args: any[]) => any[] | null } = {
   '-l': parseListing,
   '--list': parseListing,
   '-s': () => [],
-  '--summary': () => []
+  '--summary': () => [],
+  '-b': parseBenefitQuery,
+  '--benefit': parseBenefitQuery
 };
 const cliActors: { [key: string]: ActionFn } = {
   '-w': persistTransaction,
@@ -27,7 +30,9 @@ const cliActors: { [key: string]: ActionFn } = {
   '-l': showTransactions,
   '--list': showTransactions,
   '-s': printSummary,
-  '--summary': printSummary
+  '--summary': printSummary,
+  '-b': showBenefits,
+  '--benefit': showBenefits
 };
 
 // Parse CLI input
@@ -57,7 +62,8 @@ const ACTION_PROGRAM = 1;
 const actions: { [key: number]: [string, ActionFn] } = {
   0: ['List transactions', listTransactions],
   1: ['New transaction', writeTransaction],
-  2: ['Print summary', printSummary]
+  2: ['Print summary', printSummary],
+  3: ['Calculate benefits price', printBenefits]
 };
 const input = new Input();
 while (!input.done) {

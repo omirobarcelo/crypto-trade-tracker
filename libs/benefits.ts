@@ -5,6 +5,11 @@ import { TransactionsMap } from './../interfaces/transactions-map.interface.ts';
 
 const SEP = '\t\t';
 
+interface BuyData {
+  invested: number;
+  coinBought: number;
+}
+
 export const parseBenefitQuery = (coin: string, percentStr?: string): [coin: string, percent: number | null] | null => {
   if (coin == null || coin === '') {
     console.log(chalkin.red(`Cryptocoin not supplied.`));
@@ -23,47 +28,67 @@ export const parseBenefitQuery = (coin: string, percentStr?: string): [coin: str
   return [coin.toUpperCase(), null];
 };
 
-const calculateAvgBuyPrice = (transactions: Transaction[]): [CURR: string, avgBuyPrice: number] => {
-  let invested = 0;
-  let coinBought = 0;
+const initCurrency = (data: { [currency: string]: BuyData }, currency: string): void => {
+  const CURR = currency.toUpperCase();
+  if (data[CURR] == null) {
+    data[CURR] = {
+      invested: 0,
+      coinBought: 0
+    };
+  }
+};
+
+const calculateAvgBuyPrices = (transactions: Transaction[]): { [currency: string]: number } => {
+  const data: { [currency: string]: BuyData } = {};
 
   transactions.forEach((transaction) => {
+    const CURR = transaction.amountFiat.currency;
+    initCurrency(data, CURR);
     if (Math.sign(transaction.amountFiat.amount) < 0) {
-      invested += Math.abs(transaction.amountFiat.amount);
-      coinBought += Math.abs(transaction.amountCrypto);
+      data[CURR].invested += Math.abs(transaction.amountFiat.amount);
+      data[CURR].coinBought += Math.abs(transaction.amountCrypto);
     }
   });
 
-  const CURR = transactions[0].amountFiat.currency;
-  const avgBuyPrice = invested / coinBought;
+  const avgBuyPriceMap: { [currency: string]: number } = {};
+  Object.entries(data).forEach(
+    ([currency, buyData]) => (avgBuyPriceMap[currency] = buyData.invested / buyData.coinBought)
+  );
 
-  return [CURR, avgBuyPrice];
+  return avgBuyPriceMap;
 };
 
 const calculateBenefitPrice = (avgBuyPrice: number, percent: number): number => avgBuyPrice * (1 + percent / 100);
 
 const printBenefit = (coin: string, transactions: Transaction[], benefitPcent: number): void => {
-  const [CURR, avgBuyPrice] = calculateAvgBuyPrice(transactions);
+  const avgBuyPriceMap = calculateAvgBuyPrices(transactions);
 
-  const benefitPrice = calculateBenefitPrice(avgBuyPrice, benefitPcent);
-
-  console.log(
-    [chalkin.blueBright(coin), chalkin.yellow(`${benefitPcent}%`), `${benefitPrice.toFixed(3)}${coin}/${CURR}`].join(
-      SEP
-    )
-  );
+  Object.entries(avgBuyPriceMap).forEach(([CURR, avgBuyPrice]) => {
+    const benefitPrice = calculateBenefitPrice(avgBuyPrice, benefitPcent);
+    console.log(
+      [
+        chalkin.blueBright(`${coin} (${CURR})`),
+        chalkin.yellow(`${benefitPcent}%`),
+        `${benefitPrice.toFixed(3)}${coin}/${CURR}`
+      ].join(SEP)
+    );
+  });
 };
 
 const printBenefitList = (coin: string, transactions: Transaction[]): void => {
-  const [CURR, avgBuyPrice] = calculateAvgBuyPrice(transactions);
-
   const benefitPercentList = [5, 10, 20, 30, 40, 50, 100, 200];
-  const benefitPriceList = benefitPercentList.map((pcent) => calculateBenefitPrice(avgBuyPrice, pcent));
+  const avgBuyPriceMap = calculateAvgBuyPrices(transactions);
 
-  console.log(chalkin.yellow(['   ', ...benefitPercentList.map((pcent) => `${pcent}%\t`)].join(SEP)));
-  console.log(
-    [chalkin.blueBright(coin), ...benefitPriceList.map((price) => `${price.toFixed(3)}${coin}/${CURR}`)].join(SEP)
-  );
+  console.log(chalkin.yellow(['           ', ...benefitPercentList.map((pcent) => `${pcent}%\t`)].join(SEP)));
+  Object.entries(avgBuyPriceMap).forEach(([CURR, avgBuyPrice]) => {
+    const benefitPriceList = benefitPercentList.map((pcent) => calculateBenefitPrice(avgBuyPrice, pcent));
+    console.log(
+      [
+        chalkin.blueBright(`${coin} (${CURR})`),
+        ...benefitPriceList.map((price) => `${price.toFixed(3)}${coin}/${CURR}`)
+      ].join(SEP)
+    );
+  });
 };
 
 export const showBenefits = (data: TransactionsMap, coin: string, percent: number | null): void => {

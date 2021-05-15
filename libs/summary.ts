@@ -4,57 +4,126 @@ import { TransactionsMap } from './../interfaces/transactions-map.interface.ts';
 
 const SEP = '\t\t';
 
-export const printSummary = (data: TransactionsMap): void => {
-  const headerMsg = ['COIN', 'FIAT INVESTED', 'FIAT EARNED', 'CRYPTOCOIN LEFT', 'BENEFITS'];
-  console.log(chalkin.yellow(headerMsg.join(SEP)));
+interface SummaryData {
+  invested: number;
+  earned: number;
+  benefits: number;
+}
 
-  let totalInvested = 0;
-  let totalEarned = 0;
-  let totalBenefits = 0;
+interface CoinSummaryData extends SummaryData {
+  coinBought: number;
+  coinSold: number;
+  // coinAmount: number;
+  avgBuyPrice: number;
+  avgSellPrice: number;
+}
+
+const printLegend = (): void => {
+  const headerMsg = [
+    'COIN    ', // whitespace for padding
+    'FIAT INVESTED',
+    'FIAT EARNED',
+    // 'CRYPTOCOIN LEFT',
+    'BENEFITS',
+    'AVG BUY PRICE',
+    'AVG SELL PRICE'
+  ];
+  console.log(chalkin.yellow(headerMsg.join(SEP)));
+};
+
+const initCurrency = (data: { [currency: string]: SummaryData }, currency: string): void => {
+  const CURR = currency.toUpperCase();
+  if (data[CURR] == null) {
+    data[CURR] = {
+      invested: 0,
+      earned: 0,
+      benefits: 0
+    };
+  }
+};
+
+const initCoinCurrency = (data: { [currency: string]: CoinSummaryData }, currency: string): void => {
+  const CURR = currency.toUpperCase();
+  if (data[CURR] == null) {
+    data[CURR] = {
+      invested: 0,
+      earned: 0,
+      benefits: 0,
+      coinBought: 0,
+      coinSold: 0,
+      // coinAmount: 0,
+      avgBuyPrice: 0,
+      avgSellPrice: 0
+    };
+  }
+};
+
+export const printSummary = (data: TransactionsMap): void => {
+  printLegend();
+
+  const total: { [currency: string]: SummaryData } = {};
 
   Object.entries(data).forEach(([coin, transactions]) => {
-    let invested = 0;
-    let earned = 0;
-    let coinBought = 0;
-    let coinSold = 0;
+    const forCoin: { [currency: string]: CoinSummaryData } = {};
 
     transactions.forEach((transaction) => {
+      const CURR = transaction.amountFiat.currency.toUpperCase();
+      initCoinCurrency(forCoin, CURR);
       if (Math.sign(transaction.amountFiat.amount) < 0) {
-        invested += Math.abs(transaction.amountFiat.amount);
-        coinBought += Math.abs(transaction.amountCrypto);
+        forCoin[CURR].invested += Math.abs(transaction.amountFiat.amount);
+        forCoin[CURR].coinBought += Math.abs(transaction.amountCrypto);
       } else {
-        earned += Math.abs(transaction.amountFiat.amount);
-        coinSold += Math.abs(transaction.amountCrypto);
+        forCoin[CURR].earned += Math.abs(transaction.amountFiat.amount);
+        forCoin[CURR].coinSold += Math.abs(transaction.amountCrypto);
       }
     });
 
-    const coinAmount = coinBought - coinSold;
+    // TODO move fees to some document and pass it as data
+    // TODO no coin amount for now
+    // const fees: { [coin: string]: number[] } = {
+    //   BTC: [0.00014999]
+    // };
+    // const feeAmount = fees[coin] ? fees[coin].reduce((acc, curr) => (acc += curr), 0) : 0;
+    // const totalCoinBought = Object.entries(forCoin).reduce((acc, [_, summary]) => , 0);
+    // const coinAmount = coinBought - coinSold - feeAmount;
 
-    const avgBuyPrice = invested / coinBought;
-    const avgSellPrice = earned / coinSold;
-    const benefits = coinSold === 0 ? 0 : coinSold * (avgSellPrice - avgBuyPrice);
+    Object.entries(forCoin).forEach(([currency, summary]) => {
+      forCoin[currency].avgBuyPrice = summary.invested / summary.coinBought;
+      forCoin[currency].avgSellPrice = summary.coinSold === 0 ? 0 : summary.earned / summary.coinSold;
+      forCoin[currency].benefits = summary.coinSold * (forCoin[currency].avgSellPrice - forCoin[currency].avgBuyPrice);
+    });
 
-    const CURR = transactions[0].amountFiat.currency;
-    const coinMsg = [
-      chalkin.blueBright(coin),
-      `${invested.toFixed(4)}${CURR}`,
-      `${earned.toFixed(4)}${CURR}`,
-      `${coinAmount.toFixed(4)}${coin}`,
-      `${benefits.toFixed(4)}${CURR}`
-    ];
-    console.log(coinMsg.join(SEP));
+    Object.entries(forCoin).forEach(([CURR, summary]) => {
+      const coinMsg = [
+        chalkin.blueBright(`${coin} (${CURR})`),
+        `${summary.invested.toFixed(4)}${CURR}`,
+        `${summary.earned.toFixed(4)}${CURR}`,
+        // `${coinAmount.toFixed(4)}${coin}`,
+        `${summary.benefits.toFixed(4)}${CURR}`,
+        `${summary.avgBuyPrice.toFixed(4)} /${CURR}`,
+        `${summary.avgSellPrice.toFixed(4)} /${CURR}`
+      ];
+      console.log(coinMsg.join(SEP));
+    });
 
-    totalInvested += invested;
-    totalEarned += earned;
-    totalBenefits += benefits;
+    Object.entries(forCoin).forEach(([CURR, summary]) => {
+      initCurrency(total, CURR);
+      total[CURR].invested += summary.invested;
+      total[CURR].earned += summary.earned;
+      total[CURR].benefits += summary.benefits;
+    });
   });
 
-  const totalMsg = [
-    chalkin.green('TOTAL'),
-    `${totalInvested.toFixed(4)}EUR`,
-    `${totalEarned.toFixed(4)}EUR`,
-    '        ', // empty space for padding
-    `${totalBenefits.toFixed(4)}EUR`
-  ];
-  console.log(totalMsg.join(SEP));
+  Object.entries(total).forEach(([CURR, summary]) => {
+    const totalMsg = [
+      chalkin.green(`TOTAL (${CURR})`),
+      `${summary.invested.toFixed(4)}${CURR}`,
+      `${summary.earned.toFixed(4)}${CURR}`,
+      // '        ', // empty space for padding
+      `${summary.benefits.toFixed(4)}${CURR}`
+    ];
+    console.log(totalMsg.join(SEP));
+  });
+
+  printLegend();
 };

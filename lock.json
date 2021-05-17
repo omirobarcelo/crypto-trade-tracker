@@ -1,0 +1,15 @@
+{
+  "https://deno.land/x/ansi_styles@1.0.1/lib/constants.ts": "4bc8ccccd548f4eac5bc29bbe24956bad3f63b83ad92289e09d32cbe77bf67f1",
+  "https://deno.land/x/ansi_styles@1.0.1/lib/main.ts": "ece1f6c368f4fb289205378bea4a2f67e5b0ec0f3cd75df10f31d2f234d798fb",
+  "https://deno.land/x/ansi_styles@1.0.1/lib/utils.ts": "2c887afbb6ac730872395fa9a75a0543a6bac65419cd1fb3eb0fc4c3b354e889",
+  "https://deno.land/x/ansi_styles@1.0.1/mod.ts": "9b544557ba79193cce17078fa20959f2c2b816f3fd8b209658e66a603e8f3dff",
+  "https://deno.land/x/chalkin@v0.1.3/chalkin.ts": "eb491d3e7ee3f558771772510b02ca1ed3f4a49c45f469cff8b5f1d53229f0cd",
+  "https://deno.land/x/chalkin@v0.1.3/mod.ts": "e81d6db79a9d95920706362a20e4307964ef2af7ffef90de4e1abb223fc17b8e",
+  "https://deno.land/x/input@2.0.2/history.ts": "3cad3fee1e2f86d4202ca6ab49f1a5609aff2323ff762cc637e1da3edbef9608",
+  "https://deno.land/x/input@2.0.2/index.ts": "784c2d48f928d9954c06f9ca1d577140cc5ce02d1ffb1b1699f02000dc7d50c6",
+  "https://deno.land/x/input@2.0.2/printer.ts": "60339de0f3d98ca9ad2cb4e3b047d0b680e27ed7ceb987d82d96fc00f7ab04d1",
+  "https://deno.land/x/input@2.0.2/types.ts": "915079a7187073c9c9c99863ab4e4a4c7341e25bf5d4a2e02c33f8b896dd0c69",
+  "https://deno.land/x/jsonfile@1.0.0/mod.ts": "e9c1125d58078de9dc4b3ef43bcc644375af26bef565b7f623df706e97d76087",
+  "https://deno.land/x/jsonfile@1.0.0/read_json.ts": "bbf7fa8f559e8540a8bbb837078a4f2b6b3e5d94dfc7c9aaf752ab9e1a00f029",
+  "https://deno.land/x/jsonfile@1.0.0/write_json.ts": "89a6231f51a6759dfff8f1f5534d030c2239c22fc9f3c0b3305d424f4f1d5604"
+}
